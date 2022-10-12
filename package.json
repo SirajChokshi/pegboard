@@ -1,0 +1,12 @@
+{
+  "name": "pegboard",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/SirajChokshi/pegboard",
+  "author": "Siraj Chokshi <19193347+SirajChokshi@users.noreply.github.com>",
+  "license": "MIT",
+  "workspaces": [
+    "core",
+    "test"
+  ]
+}

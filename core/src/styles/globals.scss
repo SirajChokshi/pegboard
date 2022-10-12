@@ -1,0 +1,52 @@
+.pegboard {
+  position: relative;
+
+  [data-board-item] {
+    left: calc(var(--x) * var(--grid-size));
+    top: calc(var(--y) * var(--grid-size));
+    width: calc(var(--width) * var(--grid-size));
+    height: calc(var(--height) * var(--grid-size));
+
+    background: #6ba7f656;
+
+    position: absolute;
+  }
+
+  [data-board-item-handle-x] {
+    background: red;
+    position: absolute;
+    top: 0;
+
+    &:first-child {
+      left: 0;
+    }
+
+    &:last-child {
+      right: 0;
+    }
+
+    cursor: ew-resize;
+
+    width: 2px;
+    height: 100%;
+  }
+
+  [data-board-item-handle-y] {
+    background: red;
+    position: absolute;
+    left: 0;
+
+    cursor: ns-resize;
+
+    &:first-child {
+      top: 0;
+    }
+
+    &:last-child {
+      bottom: 0;
+    }
+
+    width: 100%;
+    height: 2px;
+  }
+}
