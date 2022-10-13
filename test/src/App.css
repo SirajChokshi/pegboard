@@ -34,9 +34,9 @@
 
 [data-board-item] {
   box-sizing: border-box;
-  padding: 0.5em;
   border-radius: 0.5em;
   outline: 2px solid #61dbfb;
+  user-select: none !important;
 }
 
 [data-board-item-handle-x],

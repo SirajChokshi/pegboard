@@ -1,32 +1,61 @@
-import React, { PropsWithChildren, useEffect } from 'react'
+import React, {
+  useState,
+  useContext,
+  MouseEventHandler,
+  PropsWithChildren,
+  MouseEvent,
+} from 'react'
 
-type dimensions = [number, number]
-type position = [number, number]
+import { BoardContext } from './BoardOuter'
+
+// TODO - schokshi: move to different file & rename
+type resizable = 'horizontal' | 'vertical' | 'both' | 'none'
+
+type dimensions = {
+  width: number
+  height: number
+}
+type position = {
+  x: number
+  y: number
+}
 
 interface BoardItemProps extends PropsWithChildren {
-  resizable?: 'horizontal' | 'vertical' | 'both' | 'none'
+  resizable?: resizable
   maxWidth?: number
   maxHeight?: number
+  minWidth?: number
+  minHeight?: number
   defaultPosition?: position
   defaultDimensions?: dimensions
 }
 
 export function BoardItem({
   children,
-  maxWidth = 2,
-  maxHeight = 2,
+  maxWidth = 5,
+  maxHeight = 3,
+  minWidth = 2,
+  minHeight = 2,
   resizable = 'both',
-  defaultPosition = [0, 0],
-  defaultDimensions = [1, 1],
+  defaultPosition = {
+    x: 0,
+    y: 0,
+  },
+  defaultDimensions = {
+    width: 5,
+    height: 3,
+  },
 }: BoardItemProps) {
-  const [[width, height], setDimensions] =
-    React.useState<dimensions>(defaultDimensions)
-  const [[x, y], setPosition] = React.useState<position>(defaultPosition)
+  const [dimensions, setDimensions] = useState<dimensions>(defaultDimensions)
+  const [position, setPosition] = useState<position>(defaultPosition)
 
-  const leftHandle = React.useRef<HTMLDivElement>(null)
-  const rightHandle = React.useRef<HTMLDivElement>(null)
-  const topHandle = React.useRef<HTMLDivElement>(null)
-  const bottomHandle = React.useRef<HTMLDivElement>(null)
+  const { dimensions: boundaries } = useContext(BoardContext)
+
+  const { width, height } = dimensions
+
+  const { x, y } = position
+
+  const [isResizing, setIsResizing] = React.useState(false)
 
   const item = React.useRef<HTMLDivElement>(null)
 
@@ -35,119 +64,180 @@ export function BoardItem({
     '--y': y,
     '--width': width,
     '--height': height,
+    userSelect: isResizing ? 'none' : 'auto',
   } as React.CSSProperties
 
   const canHorizontallyResize =
     resizable === 'horizontal' || resizable === 'both'
   const canVerticallyResize = resizable === 'vertical' || resizable === 'both'
 
-  useEffect(() => {
-    if (canHorizontallyResize && leftHandle.current && rightHandle.current) {
-      const leftHandleEl = leftHandle.current
-      const rightHandleEl = rightHandle.current
+  const handleResize = function (e: MouseEvent, resizable: resizable) {
+    setIsResizing(true)
 
-      const handleDrag = (e: MouseEvent) => {
-        const { clientX } = e
-        const { left, width } = leftHandleEl.getBoundingClientRect()
-        const newWidth = Math.min(
-          maxWidth,
-          Math.round(Math.max(1, width / 20 + (clientX - left) / 20)),
+    const handle = e.target as HTMLDivElement
+
+    switch (handle.dataset.boardItemHandle) {
+      case 'x':
+        document.body.style.cursor = 'ew-resize'
+        break
+      case 'y':
+        document.body.style.cursor = 'ns-resize'
+        break
+      case 'xy':
+        document.body.style.cursor = 'nwse-resize'
+        break
+      default:
+        document.body.style.cursor = 'auto'
+    }
+
+    const initialDimensions = dimensions
+    const startingMousePosition: position = {
+      x: e.pageX,
+      y: e.pageY,
+    }
+
+    function handleMouseMove(mouseMoveEvent: MouseEvent) {
+      let newWidth: number, newHeight: number
+
+      if (resizable === 'none') {
+        return
+      }
+
+      if (resizable !== 'vertical') {
+        newWidth = Math.round(
+          (initialDimensions.width * 20 -
+            startingMousePosition.x +
+            mouseMoveEvent.pageX) /
+            20,
         )
-        setDimensions((dimensions) => [newWidth, dimensions[1]])
+
+        if (newWidth < minWidth) {
+          newWidth = minWidth
+        } else if (newWidth > maxWidth) {
+          newWidth = maxWidth
+        } else if (newWidth > boundaries.width - position.x) {
+          newWidth = boundaries.width - position.x
+        }
       }
 
-      const handleDragEnd = () => {
-        document.removeEventListener('mousemove', handleDrag)
-        document.removeEventListener('mouseup', handleDragEnd)
+      if (resizable !== 'horizontal') {
+        newHeight = Math.round(
+          (initialDimensions.height * 20 -
+            startingMousePosition.y +
+            mouseMoveEvent.pageY) /
+            20,
+        )
+
+        if (newHeight < minHeight) {
+          newHeight = minHeight
+        } else if (newHeight > maxHeight) {
+          newHeight = maxHeight
+        } else if (newHeight > boundaries.height - position.y) {
+          newHeight = boundaries.height - position.y
+        }
       }
 
-      leftHandleEl.addEventListener('mousedown', (e) => {
-        e.preventDefault()
-        document.addEventListener('mousemove', handleDrag)
-        document.addEventListener('mouseup', handleDragEnd)
-      })
+      setDimensions((oldDimensions) => ({
+        width: newWidth ?? oldDimensions.width,
+        height: newHeight ?? oldDimensions.height,
+      }))
+    }
 
-      rightHandleEl.addEventListener('mousedown', (e) => {
-        e.preventDefault()
-        document.addEventListener('mousemove', handleDrag)
-        document.addEventListener('mouseup', handleDragEnd)
+    function handleMouseUp() {
+      document.body.removeEventListener('mousemove', handleMouseMove as any)
+      document.body.style.cursor = 'auto'
+      setIsResizing(false)
+    }
+
+    document.body.addEventListener('mousemove', handleMouseMove as any)
+    document.body.addEventListener('mouseup', handleMouseUp, { once: true })
+  }
+
+  const handleMove = function (e: MouseEvent) {
+    document.body.style.cursor = 'grabbing'
+
+    const initialPosition = position
+    const startingMousePosition: position = {
+      x: e.pageX,
+      y: e.pageY,
+    }
+
+    function handleMouseMove(mouseMoveEvent: MouseEvent) {
+      let newX, newY
+
+      newX = Math.round(
+        (initialPosition.x * 20 -
+          startingMousePosition.x +
+          mouseMoveEvent.pageX) /
+          20,
+      )
+
+      if (newX < 1) {
+        newX = 0
+      } else if (newX > boundaries.width - width) {
+        newX = boundaries.width - width
+      }
+
+      newY = Math.round(
+        (initialPosition.y * 20 -
+          startingMousePosition.y +
+          mouseMoveEvent.pageY) /
+          20,
+      )
+
+      if (newY < 1) {
+        newY = 0
+      } else if (newY > boundaries.height - height - 1) {
+        newY = boundaries.height - height
+      }
+
+      setPosition({
+        x: newX,
+        y: newY,
       })
     }
 
-    if (canVerticallyResize && topHandle.current && bottomHandle.current) {
-      const topHandleEl = topHandle.current
-      const bottomHandleEl = bottomHandle.current
-
-      const handleDrag = (e: MouseEvent) => {
-        const { clientY } = e
-        const { top, height } = topHandleEl.getBoundingClientRect()
-
-        const newHeight = Math.min(
-          maxHeight,
-          Math.round(Math.max(1, height / 20 + (clientY - top) / 20)),
-        )
-        setDimensions((dimensions) => [dimensions[0], newHeight])
-      }
-
-      const handleDragEnd = () => {
-        document.removeEventListener('mousemove', handleDrag)
-        document.removeEventListener('mouseup', handleDragEnd)
-      }
-
-      topHandleEl.addEventListener('mousedown', (e) => {
-        e.preventDefault()
-        document.addEventListener('mousemove', handleDrag)
-        document.addEventListener('mouseup', handleDragEnd)
-      })
-
-      bottomHandleEl.addEventListener('mousedown', (e) => {
-        e.preventDefault()
-        document.addEventListener('mousemove', handleDrag)
-        document.addEventListener('mouseup', handleDragEnd)
-      })
+    function handleMouseUp() {
+      document.body.removeEventListener('mousemove', handleMouseMove as any)
+      document.body.style.cursor = 'auto'
+      setIsResizing(false)
     }
-  }, [leftHandle, rightHandle, topHandle, bottomHandle])
 
-  // useEffect(() => {
-  //   if (item.current) {
-  //     const itemEl = item.current
-
-  //     const handleDrag = (e: MouseEvent) => {
-  //       const { clientX, clientY } = e
-  //       const { left, top } = itemEl.getBoundingClientRect()
-  //       const newX = Math.max(0, Math.round(clientX - left))
-  //       const newY = Math.max(0, Math.round(clientY - top))
-  //       setPosition([newX, newY])
-  //     }
-
-  //     const handleDragEnd = () => {
-  //       document.removeEventListener('mousemove', handleDrag)
-  //       document.removeEventListener('mouseup', handleDragEnd)
-  //     }
-
-  //     itemEl.addEventListener('mousedown', (e) => {
-  //       e.preventDefault()
-  //       document.addEventListener('mousemove', handleDrag)
-  //       document.addEventListener('mouseup', handleDragEnd)
-  //     })
-  //   }
-  // }, [item])
+    document.body.addEventListener('mousemove', handleMouseMove as any)
+    document.body.addEventListener('mouseup', handleMouseUp, { once: true })
+  } as unknown as MouseEventHandler<HTMLButtonElement>
 
   return (
     <div style={style} data-board-item ref={item}>
       {children}
 
+      <button data-board-item-move onMouseDown={handleMove}>
+        ::
+      </button>
+
       {canHorizontallyResize && (
         <>
-          <div data-board-item-handle-x ref={leftHandle} />
-          <div data-board-item-handle-x ref={rightHandle} />
+          <div data-board-item-handle="x" />
+          <div
+            data-board-item-handle="x"
+            onMouseDown={(e: MouseEvent) => handleResize(e, 'horizontal')}
+          />
         </>
       )}
       {canVerticallyResize && (
         <>
-          <div data-board-item-handle-y ref={topHandle} />
-          <div data-board-item-handle-y ref={bottomHandle} />
+          <div
+            data-board-item-handle="y"
+            onMouseDown={(e: MouseEvent) => handleResize(e, 'vertical')}
+          />
+          <div data-board-item-handle="y" />
         </>
+      )}
+      {canHorizontallyResize && canVerticallyResize && (
+        <div
+          data-board-item-handle="xy"
+          onMouseDown={(e: MouseEvent) => handleResize(e, 'both')}
+        />
       )}
     </div>
   )
