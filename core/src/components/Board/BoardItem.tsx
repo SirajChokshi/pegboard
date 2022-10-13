@@ -42,16 +42,16 @@ export function BoardItem({
   const canVerticallyResize = resizable === 'vertical' || resizable === 'both'
 
   useEffect(() => {
-    if (canHorizontallyResize) {
-      const leftHandleEl = leftHandle.current!
-      const rightHandleEl = rightHandle.current!
+    if (canHorizontallyResize && leftHandle.current && rightHandle.current) {
+      const leftHandleEl = leftHandle.current
+      const rightHandleEl = rightHandle.current
 
       const handleDrag = (e: MouseEvent) => {
         const { clientX } = e
         const { left, width } = leftHandleEl.getBoundingClientRect()
         const newWidth = Math.min(
           maxWidth,
-          Math.max(1, width - (clientX - left)),
+          Math.round(Math.max(1, width / 20 + (clientX - left) / 20)),
         )
         setDimensions((dimensions) => [newWidth, dimensions[1]])
       }
@@ -74,16 +74,17 @@ export function BoardItem({
       })
     }
 
-    if (canVerticallyResize) {
-      const topHandleEl = topHandle.current!
-      const bottomHandleEl = bottomHandle.current!
+    if (canVerticallyResize && topHandle.current && bottomHandle.current) {
+      const topHandleEl = topHandle.current
+      const bottomHandleEl = bottomHandle.current
 
       const handleDrag = (e: MouseEvent) => {
         const { clientY } = e
         const { top, height } = topHandleEl.getBoundingClientRect()
+
         const newHeight = Math.min(
           maxHeight,
-          Math.max(1, height - (clientY - top)),
+          Math.round(Math.max(1, height / 20 + (clientY - top) / 20)),
         )
         setDimensions((dimensions) => [dimensions[0], newHeight])
       }
@@ -107,30 +108,30 @@ export function BoardItem({
     }
   }, [leftHandle, rightHandle, topHandle, bottomHandle])
 
-  useEffect(() => {
-    if (item.current) {
-      const itemEl = item.current!
+  // useEffect(() => {
+  //   if (item.current) {
+  //     const itemEl = item.current
 
-      const handleDrag = (e: MouseEvent) => {
-        const { clientX, clientY } = e
-        const { left, top } = itemEl.getBoundingClientRect()
-        const newX = Math.max(0, Math.round(clientX - left))
-        const newY = Math.max(0, Math.round(clientY - top))
-        setPosition([newX, newY])
-      }
+  //     const handleDrag = (e: MouseEvent) => {
+  //       const { clientX, clientY } = e
+  //       const { left, top } = itemEl.getBoundingClientRect()
+  //       const newX = Math.max(0, Math.round(clientX - left))
+  //       const newY = Math.max(0, Math.round(clientY - top))
+  //       setPosition([newX, newY])
+  //     }
 
-      const handleDragEnd = () => {
-        document.removeEventListener('mousemove', handleDrag)
-        document.removeEventListener('mouseup', handleDragEnd)
-      }
+  //     const handleDragEnd = () => {
+  //       document.removeEventListener('mousemove', handleDrag)
+  //       document.removeEventListener('mouseup', handleDragEnd)
+  //     }
 
-      itemEl.addEventListener('mousedown', (e) => {
-        e.preventDefault()
-        document.addEventListener('mousemove', handleDrag)
-        document.addEventListener('mouseup', handleDragEnd)
-      })
-    }
-  }, [item])
+  //     itemEl.addEventListener('mousedown', (e) => {
+  //       e.preventDefault()
+  //       document.addEventListener('mousemove', handleDrag)
+  //       document.addEventListener('mouseup', handleDragEnd)
+  //     })
+  //   }
+  // }, [item])
 
   return (
     <div style={style} data-board-item ref={item}>
