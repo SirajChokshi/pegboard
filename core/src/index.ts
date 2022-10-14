@@ -1,1 +1,1 @@
-export { Board, BoardItem } from './components/Board'
+export { Board } from './components/Board'

@@ -4,21 +4,15 @@ import React, {
   MouseEventHandler,
   PropsWithChildren,
   MouseEvent,
+  CSSProperties,
+  useEffect,
 } from 'react'
 
 import { BoardContext } from './BoardOuter'
 
-// TODO - schokshi: move to different file & rename
-type resizable = 'horizontal' | 'vertical' | 'both' | 'none'
-
-type dimensions = {
-  width: number
-  height: number
-}
-type position = {
-  x: number
-  y: number
-}
+import { resizable, position, dimensions, direction } from '../../types/board'
+import { Handle } from './Handle'
+import { DIRECTION_TO_RESIZABLE } from '../../utils/maps'
 
 interface BoardItemProps extends PropsWithChildren {
   resizable?: resizable
@@ -28,15 +22,20 @@ interface BoardItemProps extends PropsWithChildren {
   minHeight?: number
   defaultPosition?: position
   defaultDimensions?: dimensions
+  liveResize?: boolean
+  livePosition?: boolean
+  className?: string
 }
 
 export function BoardItem({
   children,
-  maxWidth = 5,
-  maxHeight = 3,
+  maxWidth = Number.MAX_SAFE_INTEGER,
+  maxHeight = Number.MAX_SAFE_INTEGER,
   minWidth = 2,
   minHeight = 2,
   resizable = 'both',
+  liveResize = false,
+  livePosition = false,
   defaultPosition = {
     x: 0,
     y: 0,
@@ -45,17 +44,24 @@ export function BoardItem({
     width: 5,
     height: 3,
   },
+  className,
 }: BoardItemProps) {
   const [dimensions, setDimensions] = useState<dimensions>(defaultDimensions)
-  const [position, setPosition] = useState<position>(defaultPosition)
+  const [nextDimensions, setNextDimensions] =
+    useState<dimensions>(defaultDimensions)
 
-  const { dimensions: boundaries } = useContext(BoardContext)
+  const [position, setPosition] = useState<position>(defaultPosition)
+  const [nextPosition, setNextPosition] = useState<position>(defaultPosition)
+
+  const { dimensions: boundaries, gridSize } = useContext(BoardContext)
 
   const { width, height } = dimensions
-
   const { x, y } = position
 
   const [isResizing, setIsResizing] = React.useState(false)
+  const [isDragging, setIsDragging] = React.useState(false)
+
+  const isInteracting = isResizing || isDragging
 
   const item = React.useRef<HTMLDivElement>(null)
 
@@ -65,14 +71,16 @@ export function BoardItem({
     '--width': width,
     '--height': height,
     userSelect: isResizing ? 'none' : 'auto',
-  } as React.CSSProperties
+  } as CSSProperties
 
   const canHorizontallyResize =
     resizable === 'horizontal' || resizable === 'both'
   const canVerticallyResize = resizable === 'vertical' || resizable === 'both'
 
-  const handleResize = function (e: MouseEvent, resizable: resizable) {
+  const handleResize = function (e: MouseEvent, direction: direction) {
     setIsResizing(true)
+
+    const resizable = DIRECTION_TO_RESIZABLE[direction]
 
     const handle = e.target as HTMLDivElement
 
@@ -91,56 +99,90 @@ export function BoardItem({
     }
 
     const initialDimensions = dimensions
+    const initialPosition = position
     const startingMousePosition: position = {
       x: e.pageX,
       y: e.pageY,
     }
 
     function handleMouseMove(mouseMoveEvent: MouseEvent) {
-      let newWidth: number, newHeight: number
+      let newWidth: number,
+        newHeight: number,
+        newWidthScalar = 1,
+        newHeightScalar = 1,
+        xOffset = 0,
+        yOffset = 0
 
-      if (resizable === 'none') {
-        return
+      if (direction.includes('w')) {
+        newWidthScalar = -1
       }
 
-      if (resizable !== 'vertical') {
-        newWidth = Math.round(
-          (initialDimensions.width * 20 -
-            startingMousePosition.x +
-            mouseMoveEvent.pageX) /
-            20,
-        )
+      if (direction.includes('n')) {
+        newHeightScalar = -1
+      }
+
+      if (resizable === 'horizontal' || resizable === 'both') {
+        const initial = initialDimensions.width * gridSize
+        const delta = mouseMoveEvent.pageX - startingMousePosition.x
+
+        newWidth = Math.round((initial + newWidthScalar * delta) / gridSize)
 
         if (newWidth < minWidth) {
           newWidth = minWidth
         } else if (newWidth > maxWidth) {
           newWidth = maxWidth
-        } else if (newWidth > boundaries.width - position.x) {
+        }
+
+        // TODO - consolidate boundary check for negative values
+        if (newWidth > boundaries.width - position.x) {
           newWidth = boundaries.width - position.x
+        }
+
+        if (direction.includes('w')) {
+          xOffset = newWidth - initialDimensions.width
+        }
+
+        if (initialPosition.x - xOffset < 0) {
+          xOffset = initialPosition.x
+          newWidth = xOffset + initialDimensions.width
         }
       }
 
-      if (resizable !== 'horizontal') {
-        newHeight = Math.round(
-          (initialDimensions.height * 20 -
-            startingMousePosition.y +
-            mouseMoveEvent.pageY) /
-            20,
-        )
+      if (resizable === 'vertical' || resizable === 'both') {
+        const initial = initialDimensions.height * gridSize
+        const delta = mouseMoveEvent.pageY - startingMousePosition.y
+
+        newHeight = Math.round((initial + newHeightScalar * delta) / gridSize)
 
         if (newHeight < minHeight) {
           newHeight = minHeight
         } else if (newHeight > maxHeight) {
           newHeight = maxHeight
-        } else if (newHeight > boundaries.height - position.y) {
-          newHeight = boundaries.height - position.y
+        }
+
+        // TODO - consolidate boundary check for negative values
+        if (direction.includes('n')) {
+          yOffset = newHeight - initialDimensions.height
+        }
+
+        if (newHeight > boundaries.height - position.y - yOffset) {
+          newHeight = boundaries.height - position.y - yOffset
+        }
+
+        if (initialPosition.y - yOffset < 0) {
+          yOffset = initialPosition.y
+          newHeight = yOffset + initialDimensions.height
         }
       }
 
-      setDimensions((oldDimensions) => ({
+      ;(liveResize ? setDimensions : setNextDimensions)((oldDimensions) => ({
         width: newWidth ?? oldDimensions.width,
         height: newHeight ?? oldDimensions.height,
       }))
+      ;(liveResize ? setPosition : setNextPosition)({
+        x: initialPosition.x - xOffset,
+        y: initialPosition.y - yOffset,
+      })
     }
 
     function handleMouseUp() {
@@ -155,6 +197,7 @@ export function BoardItem({
 
   const handleMove = function (e: MouseEvent) {
     document.body.style.cursor = 'grabbing'
+    setIsDragging(true)
 
     const initialPosition = position
     const startingMousePosition: position = {
@@ -191,7 +234,7 @@ export function BoardItem({
         newY = boundaries.height - height
       }
 
-      setPosition({
+      ;(livePosition ? setPosition : setNextPosition)({
         x: newX,
         y: newY,
       })
@@ -200,45 +243,111 @@ export function BoardItem({
     function handleMouseUp() {
       document.body.removeEventListener('mousemove', handleMouseMove as any)
       document.body.style.cursor = 'auto'
-      setIsResizing(false)
+      setIsDragging(false)
     }
 
     document.body.addEventListener('mousemove', handleMouseMove as any)
     document.body.addEventListener('mouseup', handleMouseUp, { once: true })
   } as unknown as MouseEventHandler<HTMLButtonElement>
 
+  useEffect(() => {
+    if (!isInteracting) {
+      setDimensions(nextDimensions)
+      setPosition(nextPosition)
+    }
+  }, [isInteracting])
+
+  // TODO - add keyboard a11y
+  // useEffect(() => {
+  //   if (item.current) {
+  //     item.current.addEventListener('keydown', (e: KeyboardEvent) => {
+  //       if (e.key === 'ArrowRight') {
+  //         setPosition((oldPosition) => ({
+  //           x: oldPosition.x + 1,
+  //           y: oldPosition.y,
+  //         }))
+  //       } else if (e.key === 'ArrowLeft') {
+  //         setPosition((oldPosition) => ({
+  //           x: oldPosition.x - 1,
+  //           y: oldPosition.y,
+  //         }))
+  //       } else if (e.key === 'ArrowUp') {
+  //         setPosition((oldPosition) => ({
+  //           x: oldPosition.x,
+  //           y: oldPosition.y - 1,
+  //         }))
+  //       } else if (e.key === 'ArrowDown') {
+  //         setPosition((oldPosition) => ({
+  //           x: oldPosition.x,
+  //           y: oldPosition.y + 1,
+  //         }))
+  //       }
+  //     })
+  //   }
+  // }, [])
+
   return (
-    <div style={style} data-board-item ref={item}>
-      {children}
+    <>
+      <div
+        className={className}
+        style={style}
+        data-board-item
+        tabIndex={0}
+        ref={item}
+      >
+        {children}
 
-      <button data-board-item-move onMouseDown={handleMove}>
-        ::
-      </button>
+        <button
+          data-board-item-move
+          data-is-interacting={isInteracting}
+          onMouseDown={handleMove}
+        >
+          ::
+        </button>
 
-      {canHorizontallyResize && (
-        <>
-          <div data-board-item-handle="x" />
-          <div
-            data-board-item-handle="x"
-            onMouseDown={(e: MouseEvent) => handleResize(e, 'horizontal')}
-          />
-        </>
-      )}
-      {canVerticallyResize && (
-        <>
-          <div
-            data-board-item-handle="y"
-            onMouseDown={(e: MouseEvent) => handleResize(e, 'vertical')}
-          />
-          <div data-board-item-handle="y" />
-        </>
-      )}
-      {canHorizontallyResize && canVerticallyResize && (
+        {canHorizontallyResize && (
+          <>
+            <div data-board-item-handle="x" />
+            <div
+              data-board-item-handle="x"
+              onMouseDown={(e: MouseEvent) => handleResize(e, 'e')}
+            />
+          </>
+        )}
+        {canVerticallyResize && (
+          <>
+            <div
+              data-board-item-handle="y"
+              onMouseDown={(e: MouseEvent) => handleResize(e, 'n')}
+            />
+            <div
+              data-board-item-handle="y"
+              onMouseDown={(e: MouseEvent) => handleResize(e, 's')}
+            />
+          </>
+        )}
+        {canHorizontallyResize && canVerticallyResize && (
+          <>
+            <Handle direction={'se'} handler={handleResize} />
+            <Handle direction={'sw'} handler={handleResize} />
+            <Handle direction={'ne'} handler={handleResize} />
+            <Handle direction={'nw'} handler={handleResize} />
+          </>
+        )}
+      </div>
+      {isInteracting && (
         <div
-          data-board-item-handle="xy"
-          onMouseDown={(e: MouseEvent) => handleResize(e, 'both')}
+          data-board-item-ghost
+          style={
+            {
+              '--x': nextPosition.x,
+              '--y': nextPosition.y,
+              '--width': nextDimensions.width,
+              '--height': nextDimensions.height,
+            } as CSSProperties
+          }
         />
       )}
-    </div>
+    </>
   )
 }

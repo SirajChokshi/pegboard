@@ -1,5 +1,5 @@
 {
-  "name": "test",
+  "name": "pegboard-examples",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,8 @@
   "dependencies": {
     "pegboard-core": "1.0.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "wouter": "^2.8.0-alpha.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.17",

@@ -1,31 +1,29 @@
 import React, { createContext, PropsWithChildren, useMemo } from 'react'
 import '../../styles/globals.scss'
 
-type dimensions = {
-  width: number
-  height: number
-}
-interface BoardProps extends PropsWithChildren {
+import { BoardConfig } from '../../types/board'
+
+interface BoardProps extends PropsWithChildren<BoardConfig> {
   className?: string
-  gridSize: number
-  width: number
-  height: number
 }
 
-interface BoardContext {
-  gridSize: number
-  dimensions: dimensions
-}
+type BoardContext = BoardConfig
 
 export const BoardContext = createContext<BoardContext>({} as BoardContext)
 
-export function BoardOuter({
-  children,
-  width = 20,
-  height = 20,
-  className = '',
-  gridSize,
-}: BoardProps) {
+export function BoardOuter(props: BoardProps) {
+  const {
+    children,
+    dimensions = {
+      width: 20,
+      height: 20,
+    },
+    className = '',
+    gridSize,
+  } = props
+
+  const { width, height } = dimensions
+
   const cssVars = useMemo(
     () =>
       ({
@@ -33,13 +31,10 @@ export function BoardOuter({
         width: gridSize * width,
         height: gridSize * height,
       } as React.CSSProperties),
-    [gridSize],
+    [gridSize, width, height],
   )
 
-  const boardContext = {
-    gridSize,
-    dimensions: { width, height },
-  }
+  const boardContext = props as BoardContext
 
   return (
     <BoardContext.Provider value={boardContext}>
