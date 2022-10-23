@@ -1,5 +1,5 @@
 import { useWindowSize } from '../hooks/useWindowSize'
-import { Board } from 'pegboard-core/src/components/Board'
+import { Board } from 'react-pegboard/src/components/Board'
 
 const GRID_SIZE = 45
 

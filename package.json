@@ -1,13 +1,13 @@
 {
   "name": "pegboard",
   "version": "1.0.0",
-  "private": true,
   "main": "index.js",
   "repository": "https://github.com/SirajChokshi/pegboard",
   "author": "Siraj Chokshi <19193347+SirajChokshi@users.noreply.github.com>",
   "license": "MIT",
+  "private": true,
   "workspaces": [
-    "core",
-    "test"
+    "react-pegboard",
+    "examples"
   ]
 }

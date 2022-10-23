@@ -1,5 +1,5 @@
 {
-  "name": "pegboard-core",
+  "name": "react-pegboard",
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/SirajChokshi/pegboard",
@@ -28,6 +28,10 @@
     "vite-plugin-dts": "^1.6.5"
   },
   "dependencies": {
-    "vite": "^3.1.7"
+    "vite": "^3.1.7",
+    "cross-env": "5.0.5"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
   }
 }

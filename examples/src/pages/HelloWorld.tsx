@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Board } from 'pegboard-core/src/components/Board'
+import { Board } from 'react-pegboard/src/components/Board'
 
 const DEFAULT_GRID_SIZE = 20
 const DEFAULT_DIMENSIONS = {

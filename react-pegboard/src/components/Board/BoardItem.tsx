@@ -78,12 +78,17 @@ export function BoardItem({
   const canVerticallyResize = resizable === 'vertical' || resizable === 'both'
 
   const handleResize = function (e: MouseEvent, direction: direction) {
+    // Disallow simultaneous dragging and resizing
+    if (isDragging) {
+      return
+    }
     setIsResizing(true)
 
     const resizable = DIRECTION_TO_RESIZABLE[direction]
 
     const handle = e.target as HTMLDivElement
 
+    // TODO - schokshi: use a map here?
     switch (handle.dataset.boardItemHandle) {
       case 'x':
         document.body.style.cursor = 'ew-resize'
@@ -105,6 +110,7 @@ export function BoardItem({
       y: e.pageY,
     }
 
+    // TODO: Not very dry... How much of this can we move out to generic utilities?
     function handleMouseMove(mouseMoveEvent: MouseEvent) {
       let newWidth: number,
         newHeight: number,
@@ -175,10 +181,12 @@ export function BoardItem({
         }
       }
 
-      ;(liveResize ? setDimensions : setNextDimensions)((oldDimensions) => ({
-        width: newWidth ?? oldDimensions.width,
-        height: newHeight ?? oldDimensions.height,
-      }))
+      ;(liveResize ? setDimensions : setNextDimensions)(
+        (oldDimensions: dimensions) => ({
+          width: newWidth ?? oldDimensions.width,
+          height: newHeight ?? oldDimensions.height,
+        }),
+      )
       ;(liveResize ? setPosition : setNextPosition)({
         x: initialPosition.x - xOffset,
         y: initialPosition.y - yOffset,
@@ -196,6 +204,11 @@ export function BoardItem({
   }
 
   const handleMove = function (e: MouseEvent) {
+    // Disallow simultaneous dragging and resizing
+    if (isResizing) {
+      return
+    }
+
     document.body.style.cursor = 'grabbing'
     setIsDragging(true)
 
@@ -209,10 +222,10 @@ export function BoardItem({
       let newX, newY
 
       newX = Math.round(
-        (initialPosition.x * 20 -
+        (initialPosition.x * gridSize -
           startingMousePosition.x +
           mouseMoveEvent.pageX) /
-          20,
+          gridSize,
       )
 
       if (newX < 1) {
@@ -222,10 +235,10 @@ export function BoardItem({
       }
 
       newY = Math.round(
-        (initialPosition.y * 20 -
+        (initialPosition.y * gridSize -
           startingMousePosition.y +
           mouseMoveEvent.pageY) /
-          20,
+          gridSize,
       )
 
       if (newY < 1) {
