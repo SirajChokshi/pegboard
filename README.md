@@ -1,8 +1,9 @@
 # pegboard ![pegboard](https://img.shields.io/github/license/sirajchokshi/pegboard)
 
-A react library for building user-defined layouts. Quite literally, a configurable [pegboard](https://en.wikipedia.org/wiki/Perforated_hardboard) for the web.
+A react library for building user-defined layouts. A configurable [pegboard](https://en.wikipedia.org/wiki/Perforated_hardboard) for the web.
 
-Pegboard is accessible, unstyled, and customizable out of the box and supports serialization for saving and loading layouts.
+<!--
+Pegboard is accessible, unstyled, and customizable out of the box and supports serialization for saving and loading layouts. -->
 
 ## Development
 
