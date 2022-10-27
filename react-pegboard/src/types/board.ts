@@ -2,11 +2,11 @@ export type resizable = 'horizontal' | 'vertical' | 'both' | 'none'
 
 export type horizontalDirection = 'e' | 'w'
 export type verticalDirection = 'n' | 's'
-export type diagnolDirection = `${verticalDirection}${horizontalDirection}`
+export type diagonalDirection = `${verticalDirection}${horizontalDirection}`
 export type direction =
   | horizontalDirection
   | verticalDirection
-  | diagnolDirection
+  | diagonalDirection
 
 export type dimensions = {
   width: number
@@ -36,6 +36,7 @@ export interface BoardConfig {
   gridSize: number
   dimensions: dimensions
 
+  // optional
   canOverlap?: boolean
   itemDefaults?: BoardItemConfig
 }

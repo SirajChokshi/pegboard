@@ -3,16 +3,23 @@ import React, {
   useContext,
   MouseEventHandler,
   PropsWithChildren,
-  MouseEvent,
+  MouseEvent as ReactMouseEvent,
   CSSProperties,
   useEffect,
 } from 'react'
 
-import { BoardContext } from './BoardOuter'
+import type {
+  resizable,
+  position,
+  dimensions,
+  direction,
+} from '../../types/board'
+import { BoardItemSerialized } from '../../types/serialized'
 
-import { resizable, position, dimensions, direction } from '../../types/board'
+import { DIRECTION_TO_CURSOR, DIRECTION_TO_RESIZABLE } from '../../utils/maps'
+
+import { BoardContext } from './BoardOuter'
 import { Handle } from './Handle'
-import { DIRECTION_TO_RESIZABLE } from '../../utils/maps'
 
 interface BoardItemProps extends PropsWithChildren {
   resizable?: resizable
@@ -27,25 +34,27 @@ interface BoardItemProps extends PropsWithChildren {
   className?: string
 }
 
-export function BoardItem({
-  children,
-  maxWidth = Number.MAX_SAFE_INTEGER,
-  maxHeight = Number.MAX_SAFE_INTEGER,
-  minWidth = 2,
-  minHeight = 2,
-  resizable = 'both',
-  liveResize = false,
-  livePosition = false,
-  defaultPosition = {
-    x: 0,
-    y: 0,
-  },
-  defaultDimensions = {
-    width: 5,
-    height: 3,
-  },
-  className,
-}: BoardItemProps) {
+export function BoardItem(props: BoardItemProps) {
+  const {
+    children,
+    maxWidth = Number.MAX_SAFE_INTEGER,
+    maxHeight = Number.MAX_SAFE_INTEGER,
+    minWidth = 2,
+    minHeight = 2,
+    resizable = 'both',
+    liveResize = false,
+    livePosition = false,
+    defaultPosition = {
+      x: 0,
+      y: 0,
+    },
+    defaultDimensions = {
+      width: 5,
+      height: 3,
+    },
+    className,
+  } = props
+
   const [dimensions, setDimensions] = useState<dimensions>(defaultDimensions)
   const [nextDimensions, setNextDimensions] =
     useState<dimensions>(defaultDimensions)
@@ -73,11 +82,25 @@ export function BoardItem({
     userSelect: isResizing ? 'none' : 'auto',
   } as CSSProperties
 
+  const serializeBoardItem = (): BoardItemSerialized => ({
+    id: '1',
+    ...props,
+    dimensions,
+    position,
+
+    // TODO - schokshi: be more consistent about undefined/max integers
+    // reset to MAX_SAFE_INTEGER to avoid undefined
+    maxHeight,
+    maxWidth,
+    minHeight,
+    minWidth,
+  })
+
   const canHorizontallyResize =
     resizable === 'horizontal' || resizable === 'both'
   const canVerticallyResize = resizable === 'vertical' || resizable === 'both'
 
-  const handleResize = function (e: MouseEvent, direction: direction) {
+  const handleResize = function (e: ReactMouseEvent, direction: direction) {
     // Disallow simultaneous dragging and resizing
     if (isDragging) {
       return
@@ -88,19 +111,10 @@ export function BoardItem({
 
     const handle = e.target as HTMLDivElement
 
-    // TODO - schokshi: use a map here?
-    switch (handle.dataset.boardItemHandle) {
-      case 'x':
-        document.body.style.cursor = 'ew-resize'
-        break
-      case 'y':
-        document.body.style.cursor = 'ns-resize'
-        break
-      case 'xy':
-        document.body.style.cursor = 'nwse-resize'
-        break
-      default:
-        document.body.style.cursor = 'auto'
+    const handleDirection = handle.dataset.boardItemHandle as direction
+
+    if (handleDirection) {
+      document.body.style.cursor = DIRECTION_TO_CURSOR?.[handleDirection]
     }
 
     const initialDimensions = dimensions
@@ -194,16 +208,16 @@ export function BoardItem({
     }
 
     function handleMouseUp() {
-      document.body.removeEventListener('mousemove', handleMouseMove as any)
+      document.body.removeEventListener('mousemove', handleMouseMove)
       document.body.style.cursor = 'auto'
       setIsResizing(false)
     }
 
-    document.body.addEventListener('mousemove', handleMouseMove as any)
+    document.body.addEventListener('mousemove', handleMouseMove)
     document.body.addEventListener('mouseup', handleMouseUp, { once: true })
   }
 
-  const handleMove = function (e: MouseEvent) {
+  const handleMove = function (e: ReactMouseEvent) {
     // Disallow simultaneous dragging and resizing
     if (isResizing) {
       return
@@ -254,12 +268,12 @@ export function BoardItem({
     }
 
     function handleMouseUp() {
-      document.body.removeEventListener('mousemove', handleMouseMove as any)
+      document.body.removeEventListener('mousemove', handleMouseMove)
       document.body.style.cursor = 'auto'
       setIsDragging(false)
     }
 
-    document.body.addEventListener('mousemove', handleMouseMove as any)
+    document.body.addEventListener('mousemove', handleMouseMove)
     document.body.addEventListener('mouseup', handleMouseUp, { once: true })
   } as unknown as MouseEventHandler<HTMLButtonElement>
 
@@ -320,23 +334,14 @@ export function BoardItem({
 
         {canHorizontallyResize && (
           <>
-            <div data-board-item-handle="x" />
-            <div
-              data-board-item-handle="x"
-              onMouseDown={(e: MouseEvent) => handleResize(e, 'e')}
-            />
+            <Handle direction={'e'} handler={handleResize} />
+            <Handle direction={'w'} handler={handleResize} />
           </>
         )}
         {canVerticallyResize && (
           <>
-            <div
-              data-board-item-handle="y"
-              onMouseDown={(e: MouseEvent) => handleResize(e, 'n')}
-            />
-            <div
-              data-board-item-handle="y"
-              onMouseDown={(e: MouseEvent) => handleResize(e, 's')}
-            />
+            <Handle direction={'s'} handler={handleResize} />
+            <Handle direction={'n'} handler={handleResize} />
           </>
         )}
         {canHorizontallyResize && canVerticallyResize && (
