@@ -22,13 +22,11 @@ export default defineConfig({
       fileName: (format) => `${QUALIFIER}.${format}.js`,
     },
     rollupOptions: {
-      // external: ['react', 'react-dom', 'styled-components'],
       external: ['react', 'react-dom'],
       output: {
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
-          // 'styled-components': 'styled',
         },
       },
     },

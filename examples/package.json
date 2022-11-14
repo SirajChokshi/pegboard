@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react-pegboard": "1.0.0",
+    "react-pegboard": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "wouter": "^2.8.0-alpha.2",

@@ -22,15 +22,25 @@ import { BoardContext } from './BoardOuter'
 import { Handle } from './Handle'
 
 interface BoardItemProps extends PropsWithChildren {
+  // controls
   resizable?: resizable
+  frozen?: boolean
+
+  // boundaries
   maxWidth?: number
   maxHeight?: number
   minWidth?: number
   minHeight?: number
+
+  // defaults
   defaultPosition?: position
   defaultDimensions?: dimensions
+
+  // extras
   liveResize?: boolean
   livePosition?: boolean
+
+  // styling
   className?: string
 }
 
@@ -53,6 +63,7 @@ export function BoardItem(props: BoardItemProps) {
       height: 3,
     },
     className,
+    frozen = false,
   } = props
 
   const [dimensions, setDimensions] = useState<dimensions>(defaultDimensions)
@@ -101,8 +112,9 @@ export function BoardItem(props: BoardItemProps) {
   const canVerticallyResize = resizable === 'vertical' || resizable === 'both'
 
   const handleResize = function (e: ReactMouseEvent, direction: direction) {
+    // TODO - schokshi: skip adding listeners if item is frozen
     // Disallow simultaneous dragging and resizing
-    if (isDragging) {
+    if (isDragging || frozen) {
       return
     }
     setIsResizing(true)
@@ -218,8 +230,9 @@ export function BoardItem(props: BoardItemProps) {
   }
 
   const handleMove = function (e: ReactMouseEvent) {
+    // TODO - schokshi: skip adding listeners if item is frozen
     // Disallow simultaneous dragging and resizing
-    if (isResizing) {
+    if (isResizing || frozen) {
       return
     }
 
