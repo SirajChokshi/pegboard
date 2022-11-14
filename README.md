@@ -7,7 +7,7 @@ Pegboard is accessible, unstyled, and customizable out of the box and supports s
 
 ## Development
 
-Pegboard uses [Yarn Workspaces](https://yarnpkg.com/lang/en/docs/workspaces/) to manage dependencies. To install dependencies, navigate to the root direction and run:
+Pegboard uses [Lerna](https://lerna.js.org/) with [Yarn Workspaces](https://classic.yarnpkg.com/lang/en/docs/workspaces/) to manage this monorepo and its dependencies. To get started, navigate to the root directory and run:
 
 ```bash
 yarn install
@@ -16,7 +16,7 @@ yarn install
 To run the development server, run:
 
 ```bash
-yarn examples dev
+yarn dev
 ```
 
 <!-- ## Accessibility

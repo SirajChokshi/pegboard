@@ -6,6 +6,9 @@
   "author": "Siraj Chokshi <19193347+SirajChokshi@users.noreply.github.com>",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "dev": "lerna dev --scope=examples"
+  },
   "workspaces": [
     "react-pegboard",
     "examples"
