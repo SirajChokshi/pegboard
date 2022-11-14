@@ -1,15 +1,12 @@
-import React, { createContext, PropsWithChildren, useMemo } from 'react'
+import React, { PropsWithChildren, useMemo } from 'react'
 import '../../styles/globals.scss'
 
 import { BoardConfig } from '../../types/board'
+import { BoardProvider } from './context'
 
 interface BoardProps extends PropsWithChildren<BoardConfig> {
   className?: string
 }
-
-type BoardContext = BoardConfig
-
-export const BoardContext = createContext<BoardContext>({} as BoardContext)
 
 export function BoardOuter(props: BoardProps) {
   const {
@@ -34,10 +31,8 @@ export function BoardOuter(props: BoardProps) {
     [gridSize, width, height],
   )
 
-  const boardContext = props as BoardContext
-
   return (
-    <BoardContext.Provider value={boardContext}>
+    <BoardProvider {...props}>
       <div
         style={cssVars}
         className={`pegboard ${className}`}
@@ -47,6 +42,6 @@ export function BoardOuter(props: BoardProps) {
         {children}
         {/* </div> */}
       </div>
-    </BoardContext.Provider>
+    </BoardProvider>
   )
 }

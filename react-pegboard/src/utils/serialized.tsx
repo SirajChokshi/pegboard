@@ -5,14 +5,16 @@ import { BoardSerialized } from '../types/serialized'
 export const Serialized = {
   getLength: (serializedBoard: BoardSerialized) => {
     const { items } = serializedBoard
-    return Object.keys(items).length
+    return items.length
   },
 
   render: (serializedBoard: BoardSerialized) => {
     const { items } = serializedBoard
-    return Object.keys(items).map((key) => {
-      const item = items[key]
-      return <BoardItem {...item} />
-    })
+    return items.map((item) => <BoardItem {...item} />)
+  },
+
+  validate: (serializedBoard: BoardSerialized) => {
+    const { items } = serializedBoard
+    return items.every((item) => item.position !== undefined)
   },
 }

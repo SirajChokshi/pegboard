@@ -9,5 +9,5 @@ export interface BoardItemSerialized
 }
 
 export interface BoardSerialized extends BoardConfig {
-  items: Record<boardItemId, BoardItemSerialized>
+  items: BoardItemSerialized[]
 }

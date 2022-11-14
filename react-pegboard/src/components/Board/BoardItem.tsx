@@ -1,6 +1,5 @@
 import React, {
   useState,
-  useContext,
   MouseEventHandler,
   PropsWithChildren,
   MouseEvent as ReactMouseEvent,
@@ -17,8 +16,8 @@ import type {
 import { BoardItemSerialized } from '../../types/serialized'
 
 import { DIRECTION_TO_CURSOR, DIRECTION_TO_RESIZABLE } from '../../utils/maps'
+import { useBoardContext } from './context'
 
-import { BoardContext } from './BoardOuter'
 import { Handle } from './Handle'
 
 interface BoardItemProps extends PropsWithChildren {
@@ -73,7 +72,7 @@ export function BoardItem(props: BoardItemProps) {
   const [position, setPosition] = useState<position>(defaultPosition)
   const [nextPosition, setNextPosition] = useState<position>(defaultPosition)
 
-  const { dimensions: boundaries, gridSize } = useContext(BoardContext)
+  const { dimensions: boundaries, gridSize } = useBoardContext()
 
   const { width, height } = dimensions
   const { x, y } = position
@@ -159,11 +158,8 @@ export function BoardItem(props: BoardItemProps) {
 
         newWidth = Math.round((initial + newWidthScalar * delta) / gridSize)
 
-        if (newWidth < minWidth) {
-          newWidth = minWidth
-        } else if (newWidth > maxWidth) {
-          newWidth = maxWidth
-        }
+        newWidth = Math.max(newWidth, minWidth)
+        newWidth = Math.min(newWidth, maxWidth)
 
         // TODO - consolidate boundary check for negative values
         if (newWidth > boundaries.width - position.x) {
@@ -186,11 +182,8 @@ export function BoardItem(props: BoardItemProps) {
 
         newHeight = Math.round((initial + newHeightScalar * delta) / gridSize)
 
-        if (newHeight < minHeight) {
-          newHeight = minHeight
-        } else if (newHeight > maxHeight) {
-          newHeight = maxHeight
-        }
+        newHeight = Math.max(newHeight, minHeight)
+        newHeight = Math.min(newHeight, maxHeight)
 
         // TODO - consolidate boundary check for negative values
         if (direction.includes('n')) {
@@ -255,11 +248,8 @@ export function BoardItem(props: BoardItemProps) {
           gridSize,
       )
 
-      if (newX < 1) {
-        newX = 0
-      } else if (newX > boundaries.width - width) {
-        newX = boundaries.width - width
-      }
+      newX = Math.max(0, newX)
+      newX = Math.min(boundaries.width - dimensions.width, newX)
 
       newY = Math.round(
         (initialPosition.y * gridSize -
@@ -268,12 +258,10 @@ export function BoardItem(props: BoardItemProps) {
           gridSize,
       )
 
-      if (newY < 1) {
-        newY = 0
-      } else if (newY > boundaries.height - height - 1) {
-        newY = boundaries.height - height
-      }
+      newY = Math.max(0, newY)
+      newY = Math.min(boundaries.height - dimensions.height, newY)
 
+      // update position
       ;(livePosition ? setPosition : setNextPosition)({
         x: newX,
         y: newY,
