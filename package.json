@@ -9,8 +9,5 @@
   "workspaces": [
     "react-pegboard",
     "examples"
-  ],
-  "devDependencies": {
-    "lerna": "^6.0.3"
-  }
+  ]
 }
