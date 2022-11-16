@@ -7,18 +7,14 @@ import React, {
   useEffect,
 } from 'react'
 
-import type {
-  resizable,
-  position,
-  dimensions,
-  direction,
-} from '../../types/board'
-import { BoardItemSerialized } from '../../types/serialized'
+import type { resizable, position, dimensions, direction } from '@/types/board'
+import { BoardItemSerialized } from '@/types/serialized'
 
-import { DIRECTION_TO_CURSOR, DIRECTION_TO_RESIZABLE } from '../../utils/maps'
-import { useBoardContext } from './context'
+import { DIRECTION_TO_CURSOR, DIRECTION_TO_RESIZABLE } from '@/utils/maps'
+import { clamp } from '@/utils/math'
+import { useBoardContext } from '../context'
 
-import { Handle } from './Handle'
+import { Handle } from '../Handle'
 
 interface BoardItemProps extends PropsWithChildren {
   // controls
@@ -158,8 +154,7 @@ export function BoardItem(props: BoardItemProps) {
 
         newWidth = Math.round((initial + newWidthScalar * delta) / gridSize)
 
-        newWidth = Math.max(newWidth, minWidth)
-        newWidth = Math.min(newWidth, maxWidth)
+        newWidth = clamp(newWidth, minWidth, maxWidth)
 
         // TODO - consolidate boundary check for negative values
         if (newWidth > boundaries.width - position.x) {
@@ -182,8 +177,7 @@ export function BoardItem(props: BoardItemProps) {
 
         newHeight = Math.round((initial + newHeightScalar * delta) / gridSize)
 
-        newHeight = Math.max(newHeight, minHeight)
-        newHeight = Math.min(newHeight, maxHeight)
+        newHeight = clamp(newHeight, minHeight, maxHeight)
 
         // TODO - consolidate boundary check for negative values
         if (direction.includes('n')) {
@@ -248,8 +242,7 @@ export function BoardItem(props: BoardItemProps) {
           gridSize,
       )
 
-      newX = Math.max(0, newX)
-      newX = Math.min(boundaries.width - dimensions.width, newX)
+      newX = clamp(newX, 0, boundaries.width - dimensions.width)
 
       newY = Math.round(
         (initialPosition.y * gridSize -
@@ -258,8 +251,7 @@ export function BoardItem(props: BoardItemProps) {
           gridSize,
       )
 
-      newY = Math.max(0, newY)
-      newY = Math.min(boundaries.height - dimensions.height, newY)
+      newY = clamp(newY, 0, boundaries.height - dimensions.height)
 
       // update position
       ;(livePosition ? setPosition : setNextPosition)({
