@@ -10,8 +10,11 @@ import React, {
 import type { resizable, position, dimensions, direction } from '@/types/board'
 import { BoardItemSerialized } from '@/types/serialized'
 
-import { DIRECTION_TO_CURSOR, DIRECTION_TO_RESIZABLE } from '@/utils/maps'
-import { clamp } from '@/utils/math'
+import {
+  DIRECTION_TO_CURSOR,
+  DIRECTION_TO_RESIZABLE,
+} from '../../../utils/maps'
+import { clamp } from '../../../utils/math'
 import { useBoardContext } from '../context'
 
 import { Handle } from '../Handle'
