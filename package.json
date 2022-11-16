@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "lerna dev --scope=examples"
+    "dev": "lerna run dev --scope=examples"
   },
   "workspaces": [
     "react-pegboard",
