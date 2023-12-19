@@ -1,0 +1,60 @@
+header {
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4rem;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+
+  z-index: 999;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 2rem;
+  cursor: pointer;
+}
+
+header h1:hover {
+  opacity: 0.6;
+}
+
+header nav {
+  display: flex;
+  align-items: stretch;
+  border-radius: 2rem;
+  overflow: hidden;
+  background-color: var(--backgroundSecondary);
+  outline: 2px solid var(--border);
+  filter: drop-shadow(0 0.125rem 0.25rem rgba(0, 0, 0, 0.125));
+}
+
+header nav a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.125rem 0;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 1rem;
+  border: none;
+  width: 8rem;
+
+  &.active,
+  &:hover {
+    background: var(--primary);
+    color: var(--text);
+  }
+}
+
+header button {
+  filter: drop-shadow(0 0.125rem 0.25rem rgba(0, 0, 0, 0.125));
+}

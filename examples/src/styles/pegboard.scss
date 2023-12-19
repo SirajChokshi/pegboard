@@ -1,0 +1,30 @@
+/* Pegboard Overrides */
+
+.pegboard {
+  [data-board-item] {
+    box-sizing: border-box;
+    border-radius: 0.25em;
+
+    user-select: none !important;
+
+    background: lightgray;
+    outline: 2px solid grey;
+
+    color: #242424;
+  }
+
+  [data-board-item-ghost] {
+    background: #6ba7f656;
+    outline: 2px solid #61dbfb;
+    border-radius: 0.25em;
+  }
+
+  [data-board-item-handle-x],
+  [data-board-item-handle-y] {
+    opacity: 0;
+  }
+}
+
+.example-data [data-board-item] {
+  padding-left: 2rem;
+}
