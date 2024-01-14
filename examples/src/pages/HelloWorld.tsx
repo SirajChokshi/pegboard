@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Board } from 'react-pegboard/src/components/Board'
 
 const DEFAULT_GRID_SIZE = 40
@@ -7,10 +7,51 @@ const DEFAULT_DIMENSIONS = {
   height: 20,
 }
 
+function getCellWidthFromScreenWidth(screenWidth: number) {
+  if (screenWidth < 500) {
+    return 15
+  }
+
+  if (screenWidth < 800) {
+    return 30
+  }
+
+  if (screenWidth < 1200) {
+    return 40
+  }
+
+  return 50
+}
+
 // eslint-disable-next-line import/no-default-export
 export default function HelloWorld() {
   const [dimensions, setDimensions] = useState(DEFAULT_DIMENSIONS)
   const [gridSize, setGridSize] = useState(DEFAULT_GRID_SIZE)
+
+  useEffect(() => {
+    const handleResize = () => {
+      let screenWidth = window.innerWidth - 26
+      const screenHeight = window.innerHeight - 26
+
+      if (screenWidth > 740) {
+        screenWidth -= 200
+      }
+
+      const newGridSize = getCellWidthFromScreenWidth(screenWidth)
+
+      const width = Math.floor(screenWidth / newGridSize)
+      const height = Math.floor(screenHeight / newGridSize)
+
+      setDimensions({ width, height })
+      setGridSize(newGridSize)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    handleResize()
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <main className="layout-sidebar">
@@ -59,22 +100,24 @@ export default function HelloWorld() {
         </fieldset>
       </aside>
 
-      <Board gridSize={gridSize} dimensions={dimensions}>
-        <Board.Item maxHeight={20} maxWidth={20} minWidth={6} minHeight={2}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              fontWeight: 600,
-              width: '100%',
-              height: '100%',
-            }}
-          >
-            Hello World!
-          </div>
-        </Board.Item>
-      </Board>
+      <div className="layout-main">
+        <Board gridSize={gridSize} dimensions={dimensions}>
+          <Board.Item maxHeight={20} maxWidth={20} minWidth={6} minHeight={2}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                fontWeight: 600,
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              Hello World!
+            </div>
+          </Board.Item>
+        </Board>
+      </div>
     </main>
   )
 }
