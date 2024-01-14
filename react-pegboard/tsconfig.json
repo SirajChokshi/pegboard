@@ -16,9 +16,6 @@
     "outDir": "dist",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "emitDeclarationOnly": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "emitDeclarationOnly": true
   }
 }

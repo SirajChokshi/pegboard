@@ -7,8 +7,13 @@ import React, {
   useEffect,
 } from 'react'
 
-import type { resizable, position, dimensions, direction } from '@/types/board'
-import { BoardItemSerialized } from '@/types/serialized'
+import type {
+  resizable,
+  position,
+  dimensions,
+  direction,
+} from '../../../types/board'
+import { BoardItemSerialized } from '../../../types/serialized'
 
 import {
   DIRECTION_TO_CURSOR,
